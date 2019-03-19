@@ -1,0 +1,106 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<style>
+    #search-form > * {
+        margin-right: 10px;
+    }
+
+    #slots {
+        margin-top: 20px;
+    }
+
+    #slots th, td {
+        border: 1px solid black;
+    }
+
+    #slots td {
+        width: 50px;
+        height: 50px;
+        background-color: green;
+        cursor: pointer;
+    }
+
+    #slots td[slot-is-busy="true"] {
+        background-color: red;
+    }
+</style>
+
+<form id="search-form" action="/api/main/timeslots" method="get">
+    <label>
+        Офис
+        <input id="office" name="officeId">
+    </label>
+    <label>
+        Дата
+        <input type="date" id="date" name="date">
+    </label>
+    <input type="submit" value="Поиск" class="btn btn-primary">
+</form>
+
+<table id="slots">
+</table>
+
+<script>
+    window.onload = function(e) {
+        $("#office").kendoDropDownList({
+            dataTextField: "name",
+            dataValueField: "id",
+            dataSource: {
+                transport: {
+                    read: {
+                        dataType: "json",
+                        url: "/api/main/offices",
+                    }
+                }
+            }
+        });
+
+        Date.prototype.toDateInputValue = (function() {
+            var local = new Date(this);
+            local.setMinutes(this.getMinutes() - this.getTimezoneOffset());
+            return local.toJSON().slice(0,10);
+        });
+
+        $('#date').val(new Date().toDateInputValue());
+
+        $('#search-form').ajaxForm({
+            dataType: 'json',
+            success: function(data) {
+                let headerCells = '';
+                let slotCells = '';
+
+                data.forEach(function(item) {
+                    let formatTime = v => new Date(item.beginTime).toLocaleString('ru', {hour: 'numeric', minute: 'numeric'});
+                    let timeRange = formatTime(item.beginTime) + ' - ' + formatTime(item.endTime);
+                    headerCells += `<th>${timeRange}</th>`;
+                    slotCells += `<td slot-id="${item.id}" slot-is-busy="${item.isBusy}"></td>`;
+                });
+
+                let slotsTable = $('#slots');
+                $('#slots tr').remove();
+                slotsTable.append(`<tr>${headerCells}</tr>`).append(`<tr>${slotCells}</tr>`);
+
+                $('#slots td').click(function(e) {
+                    let td = $(this);
+
+                    $.ajax('/api/main/booking', {
+                        method: 'PUT',
+                        dataType: 'json',
+                        data: {timeSlotId: td.attr('slot-id')},
+                        success: function(data) {
+                            td.attr('slot-is-busy', data);
+                        },
+                        error: function() {
+                            alert('Ошибка бронирования слота');
+                        },
+                    });
+                });
+            },
+            error: function() {
+                alert('Ошибка получения списка слотов');
+            },
+        });
+    };
+</script>
