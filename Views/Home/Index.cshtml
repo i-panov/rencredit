@@ -72,7 +72,7 @@
                 let slotCells = '';
 
                 data.forEach(function(item) {
-                    let formatTime = v => new Date(item.beginTime).toLocaleString('ru', {hour: 'numeric', minute: 'numeric'});
+                    let formatTime = v => new Date(v).toLocaleString('ru', {hour: 'numeric', minute: 'numeric'});
                     let timeRange = formatTime(item.beginTime) + ' - ' + formatTime(item.endTime);
                     headerCells += `<th>${timeRange}</th>`;
                     slotCells += `<td slot-id="${item.id}" slot-is-busy="${item.isBusy}"></td>`;
@@ -98,7 +98,7 @@
                     });
                 });
             },
-            error: function() {
+            error: function(e) {
                 alert('Ошибка получения списка слотов');
             },
         });

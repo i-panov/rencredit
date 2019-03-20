@@ -1,4 +1,5 @@
 using System;
+using Newtonsoft.Json;
 
 namespace rencredit_task.Models
 {
@@ -10,6 +11,7 @@ namespace rencredit_task.Models
         public DateTime EndTime { get; set; }
         public bool IsBusy { get; set; }
         public int OfficeId { get; set; }
+        [JsonIgnore]
         public Office Office { get; set; }
     }
 }
